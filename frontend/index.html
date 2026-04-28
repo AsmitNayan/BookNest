@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BookNest</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --cream: #f5f0e8;
+    --ink: #1a1208;
+    --amber: #c8841a;
+    --amber-light: #f0c060;
+    --muted: #8a7a60;
+    --card: #fffdf7;
+    --border: #e0d5c0;
+    --red: #c0392b;
+    --green: #27ae60;
+    --sidebar-w: 220px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; display: flex; }
+
+  /* ── Sidebar ── */
+  #sidebar {
+    width: var(--sidebar-w); min-height: 100vh; background: var(--ink);
+    display: flex; flex-direction: column; padding: 0; position: fixed; top: 0; left: 0; z-index: 10;
+  }
+  .logo { padding: 28px 24px 20px; border-bottom: 1px solid #2e2618; }
+  .logo h1 { font-family: 'Playfair Display', serif; color: var(--amber-light); font-size: 1.6rem; line-height: 1; }
+  .logo span { color: var(--muted); font-size: 0.72rem; letter-spacing: 2px; text-transform: uppercase; display: block; margin-top: 4px; }
+  nav { padding: 16px 0; flex: 1; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px; padding: 12px 24px;
+    color: #9a8a72; cursor: pointer; transition: all .2s; font-size: 0.9rem; font-weight: 500;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { color: var(--amber-light); background: rgba(200,132,26,.08); }
+  .nav-item.active { color: var(--amber-light); border-left-color: var(--amber); background: rgba(200,132,26,.1); }
+  .nav-icon { font-size: 1.1rem; width: 20px; text-align: center; }
+  .sidebar-footer { padding: 20px 24px; border-top: 1px solid #2e2618; }
+  .sidebar-footer p { color: #4a3f30; font-size: 0.72rem; }
+
+  /* ── Main ── */
+  #main { margin-left: var(--sidebar-w); flex: 1; padding: 36px 40px; }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── Page Header ── */
+  .page-header { margin-bottom: 28px; }
+  .page-header h2 { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--ink); }
+  .page-header p { color: var(--muted); margin-top: 4px; font-size: 0.9rem; }
+
+  /* ── Stats ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; position: relative; overflow: hidden;
+  }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--amber); }
+  .stat-num { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--ink); }
+  .stat-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+  .stat-icon { font-size: 1.8rem; position: absolute; top: 16px; right: 16px; opacity: .15; }
+
+  /* ── Cards ── */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+    padding: 22px; transition: box-shadow .2s, transform .2s; cursor: pointer;
+  }
+  .card:hover { box-shadow: 0 8px 32px rgba(26,18,8,.12); transform: translateY(-2px); }
+  .card-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; margin-bottom: 4px; }
+  .card-sub { color: var(--muted); font-size: 0.82rem; }
+  .card-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 500;
+  }
+  .badge-genre { background: #f0e8d0; color: #7a5a20; }
+  .badge-avail { background: #d4edda; color: #155724; }
+  .badge-unavail { background: #f8d7da; color: #721c24; }
+  .badge-active { background: #cce5ff; color: #004085; }
+  .badge-overdue { background: #f8d7da; color: #721c24; }
+  .stars { color: var(--amber); font-size: 0.85rem; }
+
+  /* ── Table ── */
+  .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  thead { background: var(--ink); }
+  thead th { color: var(--amber-light); padding: 14px 18px; text-align: left; font-weight: 500; font-size: 0.8rem; letter-spacing: .5px; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .15s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #faf6ee; }
+  td { padding: 13px 18px; color: var(--ink); }
+  td .sub { color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+
+  /* ── Forms ── */
+  .form-section { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 28px; margin-bottom: 24px; }
+  .form-section h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-row.single { grid-template-columns: 1fr; }
+  .form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+  label { display: block; font-size: 0.8rem; font-weight: 500; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .5px; }
+  input, select, textarea {
+    width: 100%; padding: 10px 13px; border: 1px solid var(--border); border-radius: 8px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; background: var(--cream);
+    color: var(--ink); outline: none; transition: border .2s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--amber); background: #fff; }
+  textarea { resize: vertical; min-height: 80px; }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px;
+    border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.88rem;
+    font-weight: 500; cursor: pointer; border: none; transition: all .2s;
+  }
+  .btn-primary { background: var(--amber); color: #fff; }
+  .btn-primary:hover { background: #a06812; }
+  .btn-secondary { background: transparent; color: var(--ink); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--cream); }
+  .btn-danger { background: var(--red); color: #fff; }
+  .btn-danger:hover { background: #922b21; }
+  .btn-success { background: var(--green); color: #fff; }
+  .btn-success:hover { background: #1e8449; }
+  .btn-sm { padding: 6px 13px; font-size: 0.8rem; }
+
+  /* ── Search ── */
+  .search-bar { display: flex; gap: 10px; margin-bottom: 24px; }
+  .search-bar input { flex: 1; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed; bottom: 28px; right: 28px; padding: 14px 22px;
+    border-radius: 10px; font-size: 0.88rem; font-weight: 500; z-index: 999;
+    transform: translateY(80px); opacity: 0; transition: all .3s; pointer-events: none;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.success { background: var(--green); color: #fff; }
+  #toast.error { background: var(--red); color: #fff; }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(26,18,8,.5);
+    z-index: 100; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--card); border-radius: 16px; padding: 32px; width: 540px;
+    max-width: 95vw; max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(26,18,8,.3);
+  }
+  .modal h3 { font-family: 'Playfair Display', serif; font-size: 1.4rem; margin-bottom: 20px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+  /* ── Empty State ── */
+  .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty .icon { font-size: 3rem; margin-bottom: 12px; }
+  .empty p { font-size: 0.95rem; }
+
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+  .flex { display: flex; align-items: center; }
+  .justify-between { justify-content: space-between; }
+  .gap-2 { gap: 8px; }
+  .mb-4 { margin-bottom: 16px; }
+  .rating-input { display: flex; gap: 6px; margin-top: 4px; }
+  .rating-input span { font-size: 1.4rem; cursor: pointer; color: var(--border); transition: color .15s; }
+  .rating-input span.on { color: var(--amber); }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside id="sidebar">
+  <div class="logo">
+    <h1>BookNest</h1>
+    <span>Reading Community</span>
+  </div>
+  <nav>
+    <div class="nav-item active" onclick="navigate('dashboard')"><span class="nav-icon">🏠</span> Dashboard</div>
+    <div class="nav-item" onclick="navigate('books')"><span class="nav-icon">📚</span> Books</div>
+    <div class="nav-item" onclick="navigate('members')"><span class="nav-icon">👥</span> Members</div>
+    <div class="nav-item" onclick="navigate('lending')"><span class="nav-icon">🔄</span> Lending</div>
+    <div class="nav-item" onclick="navigate('reviews')"><span class="nav-icon">⭐</span> Reviews</div>
+  </nav>
+  <div class="sidebar-footer"><p>BookNest v1.0 · DBMS Project</p></div>
+</aside>
+
+<!-- Main -->
+<main id="main">
+
+  <!-- Dashboard -->
+  <section class="page active" id="page-dashboard">
+    <div class="page-header">
+      <h2>Dashboard</h2>
+      <p>Welcome back to BookNest 📖</p>
+    </div>
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="stat-num" id="s-books">–</div><div class="stat-label">Total Books</div><div class="stat-icon">📚</div></div>
+      <div class="stat-card"><div class="stat-num" id="s-members">–</div><div class="stat-label">Members</div><div class="stat-icon">👥</div></div>
+      <div class="stat-card"><div class="stat-num" id="s-loans">–</div><div class="stat-label">Active Loans</div><div class="stat-icon">🔄</div></div>
+      <div class="stat-card"><div class="stat-num" id="s-reviews">–</div><div class="stat-label">Reviews</div><div class="stat-icon">⭐</div></div>
+      <div class="stat-card"><div class="stat-num" id="s-overdue" style="color:var(--red)">–</div><div class="stat-label">Overdue</div><div class="stat-icon">⚠️</div></div>
+    </div>
+    <div class="divider"></div>
+    <div class="page-header"><h2 style="font-size:1.3rem">Recent Lendings</h2></div>
+    <div class="table-wrap" id="dash-table"><table><thead><tr><th>Book</th><th>Member</th><th>Due Date</th><th>Status</th></tr></thead><tbody id="dash-tbody"></tbody></table></div>
+  </section>
+
+  <!-- Books -->
+  <section class="page" id="page-books">
+    <div class="flex justify-between mb-4">
+      <div class="page-header" style="margin:0"><h2>Books</h2><p>Browse and manage the collection</p></div>
+      <button class="btn btn-primary" onclick="openModal('add-book-modal')">＋ Add Book</button>
+    </div>
+    <div class="search-bar">
+      <input id="book-search" placeholder="Search by title, author, or genre…" oninput="filterBooks()"/>
+    </div>
+    <div class="grid" id="books-grid"></div>
+  </section>
+
+  <!-- Members -->
+  <section class="page" id="page-members">
+    <div class="flex justify-between mb-4">
+      <div class="page-header" style="margin:0"><h2>Members</h2><p>Community readers</p></div>
+      <button class="btn btn-primary" onclick="openModal('add-member-modal')">＋ Add Member</button>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th><th>Loans</th></tr></thead>
+      <tbody id="members-tbody"></tbody></table>
+    </div>
+  </section>
+
+  <!-- Lending -->
+  <section class="page" id="page-lending">
+    <div class="page-header"><h2>Lending</h2><p>Issue and return books</p></div>
+    <div class="form-section">
+      <h3>Issue a Book</h3>
+      <div class="form-row">
+        <div><label>Book</label><select id="lend-book-id"><option value="">Select book…</option></select></div>
+        <div><label>Member</label><select id="lend-member-id"><option value="">Select member…</option></select></div>
+      </div>
+      <button class="btn btn-primary" onclick="issueBook()">📤 Issue Book</button>
+    </div>
+    <div class="divider"></div>
+    <div class="flex justify-between mb-4">
+      <h3 style="font-family:'Playfair Display',serif;font-size:1.2rem">Active Loans</h3>
+      <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:.85rem;cursor:pointer">
+        <input type="checkbox" id="active-only" onchange="loadLendings()"> Active only
+      </label>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Book</th><th>Member</th><th>Issued</th><th>Due</th><th>Status</th><th>Action</th></tr></thead>
+      <tbody id="lending-tbody"></tbody></table>
+    </div>
+  </section>
+
+  <!-- Reviews -->
+  <section class="page" id="page-reviews">
+    <div class="page-header"><h2>Reviews</h2><p>What readers are saying</p></div>
+    <div class="form-section">
+      <h3>Add a Review</h3>
+      <div class="form-row triple">
+        <div><label>Book</label><select id="rev-book-id"><option value="">Select book…</option></select></div>
+        <div><label>Member</label><select id="rev-member-id"><option value="">Select member…</option></select></div>
+        <div><label>Rating</label>
+          <div class="rating-input" id="rating-stars">
+            <span onclick="setRating(1)">★</span><span onclick="setRating(2)">★</span>
+            <span onclick="setRating(3)">★</span><span onclick="setRating(4)">★</span><span onclick="setRating(5)">★</span>
+          </div>
+        </div>
+      </div>
+      <div class="form-row single">
+        <div><label>Comment</label><textarea id="rev-comment" placeholder="Share your thoughts…"></textarea></div>
+      </div>
+      <button class="btn btn-primary" onclick="addReview()">⭐ Submit Review</button>
+    </div>
+    <div class="divider"></div>
+    <h3 style="font-family:'Playfair Display',serif;font-size:1.2rem;margin-bottom:16px">All Reviews</h3>
+    <div class="grid" id="reviews-grid"></div>
+  </section>
+
+</main>
+
+<!-- Modals -->
+<div class="modal-overlay" id="add-book-modal">
+  <div class="modal">
+    <h3>Add New Book</h3>
+    <div class="form-row"><div><label>Title *</label><input id="b-title" placeholder="Book title"/></div><div><label>Author *</label><input id="b-author" placeholder="Author name"/></div></div>
+    <div class="form-row"><div><label>Genre</label><input id="b-genre" placeholder="e.g. Fiction"/></div><div><label>ISBN</label><input id="b-isbn" placeholder="ISBN number"/></div></div>
+    <div class="form-row"><div><label>Published Year</label><input id="b-year" type="number" placeholder="2024"/></div><div><label>Total Copies</label><input id="b-copies" type="number" value="1" min="1"/></div></div>
+    <div class="form-row single"><div><label>Description</label><textarea id="b-desc" placeholder="Brief description…"></textarea></div></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('add-book-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addBook()">Add Book</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="add-member-modal">
+  <div class="modal">
+    <h3>Add New Member</h3>
+    <div class="form-row single"><div><label>Full Name *</label><input id="m-name" placeholder="Member name"/></div></div>
+    <div class="form-row"><div><label>Email *</label><input id="m-email" placeholder="email@example.com"/></div><div><label>Phone</label><input id="m-phone" placeholder="Phone number"/></div></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('add-member-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="addMember()">Add Member</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const API = 'http://localhost:8001';
+let allBooks = [], allMembers = [], selectedRating = 0;
+
+// ── Navigation ─────────────────────────────────────
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => { if (n.textContent.toLowerCase().includes(page === 'dashboard' ? 'dash' : page)) n.classList.add('active'); });
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'books') loadBooks();
+  if (page === 'members') loadMembers();
+  if (page === 'lending') loadLendingPage();
+  if (page === 'reviews') loadReviewsPage();
+}
+
+// ── Toast ──────────────────────────────────────────
+function toast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show ' + type;
+  setTimeout(() => t.className = '', 3000);
+}
+
+// ── Modal ──────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); }));
+
+// ── API helper ─────────────────────────────────────
+async function api(path, opts = {}) {
+  try {
+    const r = await fetch(API + path, { headers: {'Content-Type': 'application/json'}, ...opts });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || 'Request failed');
+    return data;
+  } catch (e) { toast(e.message, 'error'); throw e; }
+}
+
+// ── Stars ──────────────────────────────────────────
+function setRating(n) {
+  selectedRating = n;
+  document.querySelectorAll('#rating-stars span').forEach((s, i) => s.className = i < n ? 'on' : '');
+}
+function starsHtml(n) { return '★'.repeat(n) + '☆'.repeat(5 - n); }
+
+// ── Dashboard ──────────────────────────────────────
+async function loadDashboard() {
+  const stats = await api('/stats');
+  document.getElementById('s-books').textContent   = stats.total_books;
+  document.getElementById('s-members').textContent = stats.total_members;
+  document.getElementById('s-loans').textContent   = stats.active_loans;
+  document.getElementById('s-reviews').textContent = stats.total_reviews;
+  document.getElementById('s-overdue').textContent = stats.overdue_loans;
+
+  const lendings = await api('/lendings?active_only=false');
+  const tbody = document.getElementById('dash-tbody');
+  const recent = lendings.slice(-8).reverse();
+  tbody.innerHTML = recent.length ? recent.map(l => {
+    const due = new Date(l.due_date);
+    const overdue = !l.returned_on && due < new Date();
+    const status = l.returned_on ? `<span class="badge badge-avail">Returned</span>` : overdue ? `<span class="badge badge-overdue">Overdue</span>` : `<span class="badge badge-active">Active</span>`;
+    return `<tr><td>${l.book?.title || '–'}</td><td>${l.member?.name || '–'}</td><td>${l.due_date}</td><td>${status}</td></tr>`;
+  }).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:30px">No lending records yet</td></tr>';
+}
+
+// ── Books ──────────────────────────────────────────
+async function loadBooks() {
+  allBooks = await api('/books');
+  renderBooks(allBooks);
+  populateSelects();
+}
+
+function renderBooks(books) {
+  const grid = document.getElementById('books-grid');
+  if (!books.length) { grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="icon">📚</div><p>No books found. Add one!</p></div>`; return; }
+  grid.innerHTML = books.map(b => `
+    <div class="card" onclick="bookDetail(${b.id})">
+      <div class="card-title">${b.title}</div>
+      <div class="card-sub">by ${b.author}</div>
+      <div class="card-meta">
+        ${b.genre ? `<span class="badge badge-genre">${b.genre}</span>` : ''}
+        <span class="badge ${b.available_copies > 0 ? 'badge-avail' : 'badge-unavail'}">${b.available_copies}/${b.total_copies} available</span>
+        ${b.published_year ? `<span class="badge" style="background:#eee;color:#555">${b.published_year}</span>` : ''}
+      </div>
+      ${b.description ? `<p style="font-size:.82rem;color:var(--muted);margin-top:10px;line-height:1.5">${b.description.slice(0,90)}…</p>` : ''}
+      <div style="margin-top:14px"><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteBook(${b.id})">🗑 Delete</button></div>
+    </div>`).join('');
+}
+
+function filterBooks() {
+  const q = document.getElementById('book-search').value.toLowerCase();
+  renderBooks(q ? allBooks.filter(b => b.title.toLowerCase().includes(q) || b.author.toLowerCase().includes(q) || (b.genre||'').toLowerCase().includes(q)) : allBooks);
+}
+
+async function addBook() {
+  const title = document.getElementById('b-title').value.trim();
+  const author = document.getElementById('b-author').value.trim();
+  if (!title || !author) { toast('Title and author are required', 'error'); return; }
+  await api('/books', { method: 'POST', body: JSON.stringify({
+    title, author,
+    genre: document.getElementById('b-genre').value || null,
+    isbn: document.getElementById('b-isbn').value || null,
+    published_year: parseInt(document.getElementById('b-year').value) || null,
+    total_copies: parseInt(document.getElementById('b-copies').value) || 1,
+    description: document.getElementById('b-desc').value || null,
+  })});
+  toast('Book added!');
+  closeModal('add-book-modal');
+  ['b-title','b-author','b-genre','b-isbn','b-year','b-desc'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('b-copies').value = 1;
+  loadBooks();
+}
+
+async function deleteBook(id) {
+  if (!confirm('Delete this book?')) return;
+  await api('/books/' + id, { method: 'DELETE' });
+  toast('Book deleted');
+  loadBooks();
+}
+
+async function bookDetail(id) {
+  const book = await api('/books/' + id);
+  const reviews = book.reviews || [];
+  const avg = reviews.length ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : '–';
+  alert(`📖 ${book.title}\nAuthor: ${book.author}\nGenre: ${book.genre || '–'}\nAvailable: ${book.available_copies}/${book.total_copies}\nAvg Rating: ${avg} ⭐\nReviews: ${reviews.length}`);
+}
+
+// ── Members ────────────────────────────────────────
+async function loadMembers() {
+  allMembers = await api('/members');
+  const tbody = document.getElementById('members-tbody');
+  tbody.innerHTML = allMembers.length ? allMembers.map((m, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td><strong>${m.name}</strong></td>
+      <td>${m.email}</td>
+      <td>${m.phone || '–'}</td>
+      <td>${m.joined_on}</td>
+      <td><span class="badge badge-active">${(m.lendings || []).length} loans</span></td>
+    </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px">No members yet</td></tr>';
+  populateSelects();
+}
+
+async function addMember() {
+  const name = document.getElementById('m-name').value.trim();
+  const email = document.getElementById('m-email').value.trim();
+  if (!name || !email) { toast('Name and email are required', 'error'); return; }
+  await api('/members', { method: 'POST', body: JSON.stringify({ name, email, phone: document.getElementById('m-phone').value || null }) });
+  toast('Member added!');
+  closeModal('add-member-modal');
+  ['m-name','m-email','m-phone'].forEach(id => document.getElementById(id).value = '');
+  loadMembers();
+}
+
+// ── Lending ────────────────────────────────────────
+async function loadLendingPage() {
+  if (!allBooks.length) allBooks = await api('/books');
+  if (!allMembers.length) allMembers = await api('/members');
+  populateSelects();
+  loadLendings();
+}
+
+async function loadLendings() {
+  const activeOnly = document.getElementById('active-only').checked;
+  const lendings = await api('/lendings?active_only=' + activeOnly);
+  const tbody = document.getElementById('lending-tbody');
+  tbody.innerHTML = lendings.length ? lendings.reverse().map(l => {
+    const due = new Date(l.due_date);
+    const overdue = !l.returned_on && due < new Date();
+    const status = l.returned_on ? `<span class="badge badge-avail">✓ Returned ${l.returned_on}</span>` : overdue ? `<span class="badge badge-overdue">⚠ Overdue</span>` : `<span class="badge badge-active">Active</span>`;
+    const btn = !l.returned_on ? `<button class="btn btn-success btn-sm" onclick="returnBook(${l.id})">↩ Return</button>` : '–';
+    return `<tr><td>${l.book?.title || '–'}<div class="sub">${l.book?.author || ''}</div></td><td>${l.member?.name || '–'}</td><td>${l.issued_on}</td><td>${l.due_date}</td><td>${status}</td><td>${btn}</td></tr>`;
+  }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px">No records found</td></tr>';
+}
+
+async function issueBook() {
+  const book_id = parseInt(document.getElementById('lend-book-id').value);
+  const member_id = parseInt(document.getElementById('lend-member-id').value);
+  if (!book_id || !member_id) { toast('Select both book and member', 'error'); return; }
+  await api('/lendings', { method: 'POST', body: JSON.stringify({ book_id, member_id }) });
+  toast('Book issued! Due in 14 days.');
+  document.getElementById('lend-book-id').value = '';
+  document.getElementById('lend-member-id').value = '';
+  loadLendings();
+  allBooks = await api('/books'); // refresh availability
+}
+
+async function returnBook(id) {
+  await api('/lendings/' + id + '/return', { method: 'PATCH' });
+  toast('Book returned!');
+  loadLendings();
+}
+
+// ── Reviews ────────────────────────────────────────
+async function loadReviewsPage() {
+  if (!allBooks.length) allBooks = await api('/books');
+  if (!allMembers.length) allMembers = await api('/members');
+  populateSelects();
+  // load all reviews across books
+  const reviews = [];
+  for (const b of allBooks) {
+    const r = await api('/books/' + b.id + '/reviews');
+    r.forEach(rv => { rv._bookTitle = b.title; reviews.push(rv); });
+  }
+  const grid = document.getElementById('reviews-grid');
+  grid.innerHTML = reviews.length ? reviews.reverse().map(r => `
+    <div class="card">
+      <div class="stars">${starsHtml(r.rating)}</div>
+      <div class="card-title" style="margin-top:6px">${r._bookTitle}</div>
+      <div class="card-sub">${r.member?.name || 'Unknown'} · ${r.reviewed_on}</div>
+      ${r.comment ? `<p style="font-size:.85rem;color:var(--muted);margin-top:10px;line-height:1.5">${r.comment}</p>` : ''}
+    </div>`).join('') : `<div class="empty" style="grid-column:1/-1"><div class="icon">⭐</div><p>No reviews yet</p></div>`;
+}
+
+async function addReview() {
+  const book_id = parseInt(document.getElementById('rev-book-id').value);
+  const member_id = parseInt(document.getElementById('rev-member-id').value);
+  if (!book_id || !member_id || !selectedRating) { toast('Select book, member and rating', 'error'); return; }
+  await api('/books/' + book_id + '/reviews', { method: 'POST', body: JSON.stringify({
+    member_id, rating: selectedRating, comment: document.getElementById('rev-comment').value || null
+  })});
+  toast('Review submitted!');
+  document.getElementById('rev-comment').value = '';
+  setRating(0);
+  loadReviewsPage();
+}
+
+// ── Selects ────────────────────────────────────────
+function populateSelects() {
+  ['lend-book-id', 'rev-book-id'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const cur = el.value;
+    el.innerHTML = '<option value="">Select book…</option>' + allBooks.map(b => `<option value="${b.id}" ${b.available_copies < 1 && id.startsWith('lend') ? 'disabled' : ''}>${b.title} (${b.available_copies} avail.)</option>`).join('');
+    el.value = cur;
+  });
+  ['lend-member-id', 'rev-member-id'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const cur = el.value;
+    el.innerHTML = '<option value="">Select member…</option>' + allMembers.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+    el.value = cur;
+  });
+}
+
+// ── Init ───────────────────────────────────────────
+loadDashboard();
+</script>
+</body>
+</html>

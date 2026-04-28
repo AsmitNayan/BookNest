@@ -1,0 +1,51 @@
+BOOKNEST PROJECT - HOW TO RUN (STEP BY STEP)
+
+1.  OPEN TERMINALS Open 2 terminals:
+
+-   Terminal 1 → Backend
+-   Terminal 2 → (Optional) for seed or DB
+
+------------------------------------------------------------------------
+
+2.  ACTIVATE ENVIRONMENT cd backend conda activate ./myenv
+
+------------------------------------------------------------------------
+
+3.  START BACKEND SERVER uvicorn main:app –reload –port 8001
+
+Wait until you see: Application startup complete.
+
+------------------------------------------------------------------------
+
+4.  OPEN API (FOR DEMO) Open browser: http://127.0.0.1:8001/docs
+
+You can test APIs here.
+
+------------------------------------------------------------------------
+
+5.  RUN SEED DATA (ONLY FIRST TIME OR IF DB EMPTY) cd backend python
+    seed.py
+
+------------------------------------------------------------------------
+
+6.  OPEN FRONTEND Go to: frontend/index.html
+
+Open using: - Drag into Chrome OR - Ctrl + O in Chrome
+
+------------------------------------------------------------------------
+
+7.  IMPORTANT NOTE Frontend is configured to use: http://127.0.0.1:8001
+
+So backend must run on PORT 8001.
+
+------------------------------------------------------------------------
+
+8.  QUICK CHECK BEFORE PRESENTATION
+
+-   Backend running ✅
+-   /docs opens ✅
+-   Frontend shows data ✅
+
+------------------------------------------------------------------------
+
+DONE 🚀
